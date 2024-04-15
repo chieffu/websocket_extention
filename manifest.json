@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "WebSocket Monitor",
+  "version": "1.0",
+  "description": "Monitor and log all WebSocket messages in the console.",
+  "permissions": ["activeTab", "webNavigation","webRequest", "tabs","debugger"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}

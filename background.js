@@ -56,9 +56,9 @@ function enableWebSocketDebuggingForTab(tab) {
           mask,
           payloadData
         } = response;
-        console.log('WebSocket frame received:', params);
+       // console.log('WebSocket frame received:', params);
         let payloadDisplay;
-        if (opcode === 1 && !mask) {
+        if (opcode === 1 ) {
           // 二进制帧或者无掩码，直接输出原始 base64 数据
           payloadDisplay = payloadData;
         } else {
@@ -70,21 +70,21 @@ function enableWebSocketDebuggingForTab(tab) {
             payloadDisplay = `Failed to decode payload: ${error.message}`;
           }
         }
-        console.log(">>", payloadDisplay);
+        console.log("<<", payloadDisplay);
       } else if (method === 'Network.webSocketFrameSent' && source.tabId === tab.id) {
         const {
           requestId,
           timestamp,
-          request
+          response
         } = params;
         const {
           opcode,
           mask,
           payloadData
-        } = request;
+        } = response;
         console.log('WebSocket frame sent:', params);
         let payloadDisplay;
-        if (opcode === 1 && !mask) {
+        if (opcode === 1 ) {
           // 二进制帧或者无掩码，直接输出原始 base64 数据
           payloadDisplay = payloadData;
         } else {
@@ -97,7 +97,7 @@ function enableWebSocketDebuggingForTab(tab) {
           }
         }
 
-        console.log("<<", payloadDisplay);
+        console.log(">>", payloadDisplay);
       }
     });
   });

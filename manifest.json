@@ -3,7 +3,7 @@
   "name": "WebSocket Monitor",
   "version": "1.0",
   "description": "Monitor and log all WebSocket messages in the console.",
-  "permissions": ["activeTab", "webNavigation","webRequest", "tabs","debugger"],
+  "permissions": ["activeTab", "webNavigation","webRequest", "tabs","debugger","storage", "scripting"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
@@ -11,7 +11,20 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icon48.png"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["websocketSendMessage.js"],
+      "matches": ["<all_urls>"]
     }
   ]
 }

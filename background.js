@@ -1,14 +1,50 @@
-chrome.webRequest.onBeforeRequest.addListener(
-  function(details) {
-    if (details.type === 'websocket') {
-      console.log('details.url:', details.url);
-      console.log('details.type:', details.type);
-    }
-  }, {
-    urls: ['<all_urls>']
-  },
-  ['requestBody']
-);
+ let serverSocketSingleton;
+
+ function getWebSocket() {
+   if (serverSocketSingleton && serverSocketSingleton.readyState === WebSocket.OPEN) {
+     return serverSocketSingleton;
+   }
+
+   // 使用闭包确保 WebSocket 实例的创建和初始化过程只执行一次
+   const createAndInitializeWebSocket = (() => {
+     let initialized = false;
+     return () => {
+       if (!initialized) {
+         const wsUrl = 'ws://localhost/allbet'; // 替换为实际的WebSocket服务端URL
+         const socket = new WebSocket(wsUrl);
+
+         socket.addEventListener('open', function (event) {
+           console.log('WebSocket connection established.');
+           // 可在此处发送初始化消息或设置心跳检测等
+         });
+
+         socket.addEventListener('message', function (event) {
+           console.log('Received message:', event.data);
+           // 在此处处理接收到的服务器消息
+         });
+
+         socket.addEventListener('close', function (event) {
+           console.log('WebSocket connection closed:', event.code, event.reason);
+           // 可在此处设置重连逻辑
+         });
+
+         socket.addEventListener('error', function (event) {
+           console.error('WebSocket error:', event);
+           // 在此处处理连接错误
+         });
+
+         serverSocketSingleton = socket;
+         initialized = true;
+       }
+       return serverSocketSingleton;
+     };
+   })();
+
+   return createAndInitializeWebSocket();
+ }
+serverSocketSingleton = getWebSocket();
+   // 初始化连接
+
 
 // 切换标签页事件
 const attachedTabs = new Map(); // 用于存储已添加调试器的标签页 ID
@@ -30,8 +66,6 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
 
 // 封装功能为单独的函数
 function enableWebSocketDebuggingForTab(tab) {
-
-
   chrome.debugger.attach({
     tabId: tab.id
   }, '1.3', () => {
@@ -61,44 +95,10 @@ function enableWebSocketDebuggingForTab(tab) {
         if (opcode === 1 ) {
           // 二进制帧或者无掩码，直接输出原始 base64 数据
           payloadDisplay = payloadData;
-        } else {
-          // 其他情况（文本帧或有掩码的帧），尝试解码为文本
-          try {
-            const decodedPayload = atob(payloadData);
-            payloadDisplay = decodedPayload;
-          } catch (error) {
-            payloadDisplay = `Failed to decode payload: ${error.message}`;
-          }
+          getWebSocket().send(payloadData)
         }
-        console.log("<<", payloadDisplay);
-      } else if (method === 'Network.webSocketFrameSent' && source.tabId === tab.id) {
-        const {
-          requestId,
-          timestamp,
-          response
-        } = params;
-        const {
-          opcode,
-          mask,
-          payloadData
-        } = response;
-        console.log('WebSocket frame sent:', params);
-        let payloadDisplay;
-        if (opcode === 1 ) {
-          // 二进制帧或者无掩码，直接输出原始 base64 数据
-          payloadDisplay = payloadData;
-        } else {
-          // 其他情况（文本帧或有掩码的帧），尝试解码为文本
-          try {
-            const decodedPayload = atob(payloadData);
-            payloadDisplay = decodedPayload;
-          } catch (error) {
-            payloadDisplay = `Failed to decode payload: ${error.message}`;
-          }
-        }
+     }
 
-        console.log(">>", payloadDisplay);
-      }
     });
   });
 }
@@ -140,3 +140,5 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
   }
 });
+
+

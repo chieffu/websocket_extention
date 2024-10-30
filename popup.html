@@ -1,12 +1,81 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>Popup</title>
-    <script src="popup.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>插件配置</title>
+    <style>
+        body {
+            width: 400px;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+        }
+        .option {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        input[type="text"] {
+            width: 100px;
+            margin: 0 10px;
+        }
+        .status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-<textarea type="text" id="message-input" placeholder="Enter message..."></textarea>
-<button id="send-button">Send</button>
+<h2>插件配置</h2>
+<form id="configForm">
+    <div class="option">
+        <label for="option1">选项1:</label>
+        <input type="checkbox" id="option1" name="option1">
+        <input type="text" id="input1" name="input1">
+        <label for="input1">输入1</label>
+    </div>
+    <div class="option">
+        <label for="option2">选项2:</label>
+        <input type="checkbox" id="option2" name="option2">
+        <input type="text" id="input2" name="input2">
+        <label for="input2">输入2</label>
+    </div>
+    <div class="option">
+        <label for="option3">选项3:</label>
+        <input type="checkbox" id="option3" name="option3">
+        <input type="text" id="input3" name="input3">
+        <label for="input3">输入3</label>
+    </div>
+    <div class="option">
+        <label for="option4">选项4:</label>
+        <input type="checkbox" id="option4" name="option4">
+        <input type="text" id="input4" name="input4">
+        <label for="input4">输入4</label>
+    </div>
+    <div class="option">
+        <label for="option5">选项5:</label>
+        <input type="checkbox" id="option5" name="option5">
+        <input type="text" id="input5" name="input5">
+        <label for="input5">输入5</label>
+    </div>
+    <div class="option">
+        <label for="option6">选项6:</label>
+        <input type="checkbox" id="option6" name="option6">
+        <input type="text" id="input6" name="input6">
+        <label for="input6">输入6</label>
+    </div>
+    <div class="option">
+        <label for="option7">选项7:</label>
+        <input type="checkbox" id="option7" name="option7">
+        <input type="text" id="input7" name="input7">
+        <label for="input7">输入7</label>
+    </div>
+    <button type="submit">保存配置</button>
+</form>
+<div class="status">
+    <p id="statsInfo">统计信息: 已选择 0 项，共填写 0 个输入框</p>
+    <p id="currentStatus">当前状态: 未保存</p>
+</div>
+<script src="popup.js"></script>
 </body>
 </html>

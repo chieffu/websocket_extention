@@ -1,50 +1,67 @@
- let serverSocketSingleton;
+let serverSocketSingleton;
+let isCreatingWebSocket = false; // 锁变量
+let resolveQueue = []; // 用于存储等待的 resolve 函数
 
  function getWebSocket() {
-   if (serverSocketSingleton && serverSocketSingleton.readyState === WebSocket.OPEN) {
-     return serverSocketSingleton;
-   }
+   return new Promise((resolve, reject) => {
+     if (serverSocketSingleton && serverSocketSingleton.readyState === WebSocket.OPEN) {
+       resolve(serverSocketSingleton);
+       return;
+     }
 
-   // 使用闭包确保 WebSocket 实例的创建和初始化过程只执行一次
-   const createAndInitializeWebSocket = (() => {
-     let initialized = false;
-     return () => {
-       if (!initialized) {
-         const wsUrl = 'ws://localhost/allbet'; // 替换为实际的WebSocket服务端URL
-         const socket = new WebSocket(wsUrl);
+     if (isCreatingWebSocket) {
+       // 如果已经有进程在创建 WebSocket 连接，将当前进程加入等待队列
+       resolveQueue.push(resolve);
+       return;
+     }
 
-         socket.addEventListener('open', function (event) {
-           console.log('WebSocket connection established.');
-           // 可在此处发送初始化消息或设置心跳检测等
-         });
+     isCreatingWebSocket = true;
 
-         socket.addEventListener('message', function (event) {
-           console.log('Received message:', event.data);
-           // 在此处处理接收到的服务器消息
-         });
+     const createAndInitializeWebSocket = () => {
+       const wsUrl = 'ws://localhost/allbet'; // 替换为实际的 WebSocket 服务端 URL
+       const socket = new WebSocket(wsUrl);
 
-         socket.addEventListener('close', function (event) {
-           console.log('WebSocket connection closed:', event.code, event.reason);
-           // 可在此处设置重连逻辑
-         });
-
-         socket.addEventListener('error', function (event) {
-           console.error('WebSocket error:', event);
-           // 在此处处理连接错误
-         });
-
+       socket.addEventListener('open', function (event) {
+         console.log('WebSocket connection established.');
          serverSocketSingleton = socket;
-         initialized = true;
-       }
-       return serverSocketSingleton;
+         isCreatingWebSocket = false;
+
+         // 解锁所有等待的进程
+         resolveQueue.forEach(res => res(socket));
+         resolveQueue = [];
+
+         resolve(socket);
+       });
+
+       socket.addEventListener('message', function (event) {
+         console.log('Received message:', event.data);
+         try {
+           sendServerMessageToWebSocket(event.data);
+         } catch (e) {
+           console.warn('Error sending message:', e);
+         }
+         // 在此处处理接收到的服务器消息
+       });
+
+       socket.addEventListener('close', function (event) {
+         console.log('WebSocket connection closed:', event.code, event.reason);
+         // 可在此处设置重连逻辑
+       });
+
+       socket.addEventListener('error', function (event) {
+         console.error('WebSocket error:', event);
+         // 在此处处理连接错误
+       });
      };
-   })();
 
-   return createAndInitializeWebSocket();
+     createAndInitializeWebSocket();
+   });
  }
-serverSocketSingleton = getWebSocket();
-   // 初始化连接
-
+ // 示例调用
+ async function sendMessageToServer(message) {
+   const socket = await getWebSocket();
+   socket.send(message);
+ }
 
 // 切换标签页事件
 const attachedTabs = new Map(); // 用于存储已添加调试器的标签页 ID
@@ -66,16 +83,17 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
 
 // 封装功能为单独的函数
 function enableWebSocketDebuggingForTab(tab) {
-  chrome.debugger.attach({
-    tabId: tab.id
-  }, '1.3', () => {
     if (attachedTabs.has(tab.id)) {
       console.log(`Debugger already attached to tab ${tab.id}. Skipping.`);
-    } else {
-      chrome.debugger.sendCommand({
-        tabId: tab.id
-      }, 'Network.enable');
+      //return;
     }
+    chrome.debugger.attach({
+        tabId: tab.id
+    }, '1.3', () => {
+    chrome.debugger.sendCommand({
+        tabId: tab.id
+     }, 'Network.enable');
+
     attachedTabs.set(tab.id, true);
     chrome.debugger.onEvent.addListener((source, method, params) => {
       // console.log(`debugger on event ${source}  ${method}  ${params}`);
@@ -91,34 +109,75 @@ function enableWebSocketDebuggingForTab(tab) {
           payloadData
         } = response;
        // console.log('WebSocket frame received:', params);
-        let payloadDisplay;
         if (opcode === 1 ) {
           // 二进制帧或者无掩码，直接输出原始 base64 数据
-          payloadDisplay = payloadData;
-          getWebSocket().send(payloadData)
+          sendMessageToServer(payloadData)
         }
      }
 
     });
+
+    injectWebSocketTracker(tab.id);
   });
 }
 
-// 查询当前窗口的所有非隐藏标签页并尝试启用WebSocket调试功能
-chrome.tabs.query({
-  active: true,
-  currentWindow: true
-}, (tabs) => {
-  for (const tab of tabs) {
-    if (!isInternalURL(tab.url)) {
-      console.log('enable debugging for tab ', tab);
+//给所有websocket发送服务端传来的消息
+function sendServerMessageToWebSocket(data){
+   attachedTabs.forEach((value, tabId) => {
+       chrome.debugger.sendCommand({tabId: tabId}, 'Runtime.evaluate', {
+          expression: data,
+          returnByValue: true,
+         // 传递数据
+         // 传递数据
+       }, (results) => {
+         if (chrome.runtime.lastError) {
+           console.error('发送消息时执行脚本报错：')
+           console.error(JSON.stringify(chrome.runtime.lastError, null, 2));
+         } else {
+           console.log('消息发送成功');
+         }
+       });
+  });
+}
 
-      enableWebSocketDebuggingForTab(tab);
+function injectWebSocketTracker(tabId) {
+   const script = `(function() {
+     if (window._webSocketTrackerInjected) return;
+     window._webSocketTrackerInjected = true;
+     // 查找并发送消息到所有处于 OPEN 状态的 WebSocket 实例
+     function handleMessage(message) {
+       if(window){
+           console.log("window :"+window);
+           //window.Netbet.component.baseGameHall.sexyHall();
+       }
+       console.log("message:"+message);
+       (function(){eval(message);})()
+     }
+      // 模拟点击事件
+     function simulateClick(element) {
+         const clickEvent = new MouseEvent('click', {
+             bubbles: true,
+             cancelable: true,
+             view: window
+         });
+         element.dispatchEvent(clickEvent);
+     }
+     // 暴露方法供外部调用
+     window.handleMessage = handleMessage;
+     window.simulateClick = simulateClick;
+     console.log('WebSocket tracker injected successfully.');
+   })();
+    `;
 
-    } else {
-      console.log(`Skipped attaching debugger to internal URL: ${tab.url}`);
+  chrome.debugger.sendCommand({tabId: tabId}, 'Runtime.evaluate', {
+    expression: script,
+    returnByValue: true
+  }, function(result) {
+    if (chrome.runtime.lastError) {
+       console.error(JSON.stringify(chrome.runtime.lastError, null, 2));
     }
-  }
-});
+  });
+}
 
 function isInternalURL(url) {
   return url.startsWith('chrome://') || url.startsWith('about:');

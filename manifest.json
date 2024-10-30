@@ -23,7 +23,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["websocketSendMessage.js"],
+      "resources": ["resources/websocketSendMessage.js"],
       "matches": ["<all_urls>"]
     }
   ]

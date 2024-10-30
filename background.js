@@ -134,7 +134,7 @@ function sendServerMessageToWebSocket(data){
            console.error('发送消息时执行脚本报错：')
            console.error(JSON.stringify(chrome.runtime.lastError, null, 2));
          } else {
-           console.log('消息发送成功');
+           console.log('消息发送成功:'+JSON.stringify(results));
          }
        });
   });
@@ -153,18 +153,8 @@ function injectWebSocketTracker(tabId) {
        console.log("message:"+message);
        (function(){eval(message);})()
      }
-      // 模拟点击事件
-     function simulateClick(element) {
-         const clickEvent = new MouseEvent('click', {
-             bubbles: true,
-             cancelable: true,
-             view: window
-         });
-         element.dispatchEvent(clickEvent);
-     }
      // 暴露方法供外部调用
      window.handleMessage = handleMessage;
-     window.simulateClick = simulateClick;
      console.log('WebSocket tracker injected successfully.');
    })();
     `;

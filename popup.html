@@ -6,18 +6,32 @@
     <title>插件配置</title>
     <style>
         body {
-            width: 400px;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
             padding: 10px;
             font-family: Arial, sans-serif;
         }
-        .option {
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed; /* 固定列宽 */
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            vertical-align: middle;
+            white-space: nowrap; /* 防止内容换行 */
+            overflow: hidden; /* 超出部分隐藏 */
+            text-overflow: ellipsis; /* 超出部分显示省略号 */
+        }
+        th {
+            background-color: #f2f2f2;
         }
         input[type="text"] {
-            width: 100px;
-            margin: 0 10px;
+            width: 100%;
+            box-sizing: border-box;
         }
         .status {
             margin-top: 20px;
@@ -28,48 +42,54 @@
 <body>
 <h2>插件配置</h2>
 <form id="configForm">
-    <div class="option">
-        <label for="option1">选项1:</label>
-        <input type="checkbox" id="option1" name="option1">
-        <input type="text" id="input1" name="input1">
-        <label for="input1">输入1</label>
-    </div>
-    <div class="option">
-        <label for="option2">选项2:</label>
-        <input type="checkbox" id="option2" name="option2">
-        <input type="text" id="input2" name="input2">
-        <label for="input2">输入2</label>
-    </div>
-    <div class="option">
-        <label for="option3">选项3:</label>
-        <input type="checkbox" id="option3" name="option3">
-        <input type="text" id="input3" name="input3">
-        <label for="input3">输入3</label>
-    </div>
-    <div class="option">
-        <label for="option4">选项4:</label>
-        <input type="checkbox" id="option4" name="option4">
-        <input type="text" id="input4" name="input4">
-        <label for="input4">输入4</label>
-    </div>
-    <div class="option">
-        <label for="option5">选项5:</label>
-        <input type="checkbox" id="option5" name="option5">
-        <input type="text" id="input5" name="input5">
-        <label for="input5">输入5</label>
-    </div>
-    <div class="option">
-        <label for="option6">选项6:</label>
-        <input type="checkbox" id="option6" name="option6">
-        <input type="text" id="input6" name="input6">
-        <label for="input6">输入6</label>
-    </div>
-    <div class="option">
-        <label for="option7">选项7:</label>
-        <input type="checkbox" id="option7" name="option7">
-        <input type="text" id="input7" name="input7">
-        <label for="input7">输入7</label>
-    </div>
+    <table>
+        <thead>
+        <tr>
+            <th>下注类型</th>
+            <th>最小数学期望</th>
+            <th>下注金额</th>
+            <th>是否下注</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>幸运女皇</td>
+            <td><input type="text" id="luckyQueueOdds" value="1.05"></td>
+            <td><input type="number" id="luckQueueBet" value="160"/></td>
+            <td><input type="checkbox" id="luckyQueue" checked></td>
+        </tr>
+        <tr>
+            <td>烫三手</td>
+            <td><input type="text" id="hotThreeOdds" value="1.05"></td>
+            <td><input type="number" id="hotThreeBet" value="160"/></td>
+            <td><input type="checkbox" id="hotThree" checked></td>
+        </tr>
+        <tr>
+            <td>幸运三</td>
+            <td><input type="text" id="luckyThreeOdds" value="1.05"></td>
+            <td><input type="number" id="luckyThreeBet" value="160"/></td>
+            <td><input type="checkbox" id="luckyThree" checked></td>
+        </tr>
+        <tr>
+            <td>爆牌</td>
+            <td><input type="text" id="bloomOdds" value="1.05"></td>
+            <td><input type="number" id="bloomBet" value="160"/></td>
+            <td><input type="checkbox" id="bloom" checked></td>
+        </tr>
+        <tr>
+            <td>对子</td>
+            <td><input type="text" id="pairOdds" value="1.05"></td>
+            <td><input type="number" id="pairBet" value="160"/></td>
+            <td><input type="checkbox" id="pair" checked></td>
+        </tr>
+        <tr>
+            <td>底注</td>
+            <td><input type="text" id="commonOdds" value="1.05"></td>
+            <td><input type="number" id="commonBet" value="20"/></td>
+            <td><input type="checkbox" id="common" checked></td>
+        </tr>
+        </tbody>
+    </table>
     <button type="submit">保存配置</button>
 </form>
 <div class="status">
